@@ -6,15 +6,29 @@ on:
       - main
 
 jobs:
-  discord:
+  notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send commit info to Discord
-        uses: Ilshidur/action-discord@master
-        with:
-          webhook: https://discord.com/api/webhooks/1360325548240539709/WHd0CvsFk8g6q6VkdBCCRWzqC1IYpSesdz3_ZKvduWXLvWQvKxhDk2B96KQSXl5nOyHg
-          message: |
-            🔧 **New commit pushed!**
-            👤 Commit by: **${{ github.actor }}**
-            📝 Message: _${{ github.event.head_commit.message }}_
-            🔗 [View Commit](${{ github.event.head_commit.url }})
+      - name: Send message to Discord
+        env:
+          DISCORD_WEBHOOK: https://discord.com/api/webhooks/1360325548240539709/WHd0CvsFk8g6q6VkdBCCRWzqC1IYpSesdz3_ZKvduWXLvWQvKxhDk2B96KQSXl5nOyHg
+          GITHUB_ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_URL: ${{ github.event.head_commit.url }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -X POST \
+            -d "{
+              \"username\": \"GitHub Bot\",
+              \"avatar_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",
+              \"embeds\": [{
+                \"title\": \"🔧 New Commit\",
+                \"description\": \"📝 **${COMMIT_MSG}**\",
+                \"url\": \"${COMMIT_URL}\",
+                \"color\": 16753920,
+                \"footer\": {
+                  \"text\": \"By ${GITHUB_ACTOR}\"
+                }
+              }]
+            }" \
+            $DISCORD_WEBHOOK
